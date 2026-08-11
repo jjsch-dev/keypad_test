@@ -1,0 +1,81 @@
+menu "Keypad (GTX312L capacitive touch)"
+
+    config KEYPAD_SDA_GPIO
+        int "I2C SDA GPIO"
+        default 8
+        help
+            ESP32-S3 GPIO wired to the GTX312L SDA (DevKitC-1 bench default).
+
+    config KEYPAD_SCL_GPIO
+        int "I2C SCL GPIO"
+        default 9
+        help
+            ESP32-S3 GPIO wired to the GTX312L SCL (DevKitC-1 bench default).
+
+    config KEYPAD_INT_GPIO
+        int "INT (interrupt) GPIO"
+        default 4
+        help
+            Open-drain active-low INT output of the GTX312L. Pick an
+            RTC-capable GPIO (0..21 on the S3) so the line can later wake
+            the chip from deep sleep (touch-gated power policy, D9).
+
+    config KEYPAD_I2C_FREQ_HZ
+        int "I2C clock (Hz)"
+        default 37000
+        help
+            OEM parity: ~37 kHz. The lock board relies on the weak GTX312L
+            internal pull-ups, so faster clocks only work with external
+            pull-ups fitted. Raise to 100000 only if you add them.
+
+    config KEYPAD_SENS_ACTIVE
+        hex "Sensitivity while tracking a touch"
+        default 0x08
+        range 0x03 0x3F
+        help
+            GTX312L SENSITIVITY1..12 written on the wake delta. Lower value
+            = MORE sensitive. OEM uses 0x08 (below the datasheet's
+            recommended 0x0C floor; documented parity).
+
+    config KEYPAD_SENS_IDLE
+        hex "Sensitivity while idle"
+        default 0x0A
+        range 0x03 0x3F
+        help
+            GTX312L SENSITIVITY1..12 in the low-power idle config. OEM uses
+            0x0A: rejects bench ghost touches while keeping real keys.
+
+    config KEYPAD_ACCEPT_MIN_POLLS
+        int "Consecutive polls to accept a key"
+        default 4
+        range 2 20
+        help
+            A key press is accepted when the touch mask holds exactly one
+            bit common to every sample for at least this many consecutive
+            polls (OEM debounce window measured at ~60-80 ms = 3-4 polls).
+
+    config KEYPAD_ZERO_TOLERANCE_POLLS
+        int "Zero polls that end an episode"
+        default 2
+        range 1 10
+        help
+            An episode ends (key released) after this many consecutive
+            zero touch-mask polls. Tolerates single-poll dropouts seen in
+            real captures without delaying release detection (~40 ms).
+
+    config KEYPAD_POLL_PERIOD_MS
+        int "Active polling period (ms)"
+        default 20
+        range 5 100
+        help
+            TOUCH_OUT polling period while awake (OEM parity: 20 ms).
+
+    config KEYPAD_IDLE_TIMEOUT_MS
+        int "Idle timeout (ms)"
+        default 6000
+        range 1000 60000
+        help
+            No-touch time before the idle config is rewritten and the CPU
+            may sleep. Measured OEM behavior: ~5.7-5.9 s.
+
+endmenu
